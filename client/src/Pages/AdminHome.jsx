@@ -31,8 +31,6 @@ const AdminHome = () => {
         }));
     };
 
-   
-
     useEffect(() => {
         const dataInSession = sessionStorage.getItem("csiAdmin");
         const active = JSON.parse(dataInSession).active;
@@ -51,8 +49,6 @@ const AdminHome = () => {
             password: password
         });
 
-    
-
         let config = {
             method: 'post',
             maxBodyLength: Infinity,
@@ -69,7 +65,6 @@ const AdminHome = () => {
             })
             .catch((error) => {
                 toast.error(error.response?.data?.message || "An error occurred");
-          
             });
     };
 
@@ -81,7 +76,7 @@ const AdminHome = () => {
         let data = JSON.stringify({ email, active: !active });
 
         let config = {
-            method: 'put',
+            method: 'post',
             maxBodyLength: Infinity,
             url: '/admin/toggle-active',
             headers: {
@@ -105,9 +100,51 @@ const AdminHome = () => {
             });
     };
 
+    const setLocation = () => {
+        if (!navigator.geolocation) {
+            return toast.error("Geolocation is not supported by this browser.");
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            async (position) => {
+                const { latitude, longitude } = position.coords;
+                const dataInSession = sessionStorage.getItem("csiAdmin");
+                const email = JSON.parse(dataInSession).email;
+
+                let data = JSON.stringify({
+                    email: email,
+                    latitude: latitude,
+                    longitude: longitude
+                });
+
+                let config = {
+                    method: 'post',
+                    maxBodyLength: Infinity,
+                    url: '/set-location',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    data
+                };
+
+                try {
+                    const response = await axiosInstance.request(config);
+                    toast.success("Location set successfully!");
+                } catch (err) {
+                    console.error("Failed to set location:", err);
+                    toast.error("Failed to set location.");
+                }
+            },
+            (error) => {
+                console.error("Error getting location:", error);
+                toast.error("Failed to retrieve location.");
+            }
+        );
+    };
+
     return (
         <div className="min-h-screen bg-gray-100 flex items-center justify-center p-6">
-            <div className="bg-white p-10 rounded-lg shadow-lg w-full max-w-xl"> {/* Increased size */}
+            <div className="bg-white p-10 rounded-lg shadow-lg w-full max-w-xl">
                 <h1 className="text-3xl font-bold mb-6 text-center text-blue-600">🔑 Admin Home</h1>
                 <div className="mb-4">
                     <label htmlFor="otp" className="block text-gray-700 font-medium mb-2 text-lg">Enter OTP:</label>
@@ -147,6 +184,12 @@ const AdminHome = () => {
                         className="mt-4 w-full bg-yellow-500 text-white py-2 px-4 rounded-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-500"
                     >
                         Present Students
+                    </button>
+                    <button
+                        onClick={setLocation}
+                        className="mt-4 w-full bg-purple-500 text-white py-2 px-4 rounded-md hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    >
+                        Set Location
                     </button>
                 </div>
             </div>

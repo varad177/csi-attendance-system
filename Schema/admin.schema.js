@@ -29,6 +29,12 @@ const adminSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    lat: {
+      type: String,
+    },
+    long: {
+      type: String,
+    },
   },
   { timestamps: true }
 );

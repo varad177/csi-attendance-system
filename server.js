@@ -3,11 +3,11 @@ import mongoose from "mongoose";
 import "dotenv/config";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
-import path from 'path'
+import path from "path";
 import cors from "cors";
 import Admin from "./Schema/admin.schema.js";
 import Student from "./Schema/student.schema.js";
-const __dirname = path.resolve()
+const __dirname = path.resolve();
 const server = express();
 
 server.use(express.json());
@@ -109,7 +109,7 @@ server.post("/admin/add-otp", async (req, res) => {
   }
 });
 
-server.put("/admin/toggle-active", async (req, res) => {
+server.post("/admin/toggle-active", async (req, res) => {
   try {
     const { email, active } = req.body;
     if (!email || typeof active !== "boolean") {
@@ -216,8 +216,48 @@ server.post("/get-ename", async (req, res) => {
     res.status(500).json({ message: "Server error", error });
   }
 });
+server.post("/get-loc", async (req, res) => {
+  try {
+    const users = await Admin.find({});
+    const admin = users[0];
+    let loc = {
+      lat: admin.lat,
+      long: admin.long,
+    };
+    res.status(200).json(loc);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Server error", error });
+  }
+});
 
+server.post("/set-location", async (req, res) => {
+  const { email, latitude, longitude } = req.body;
 
+  if (!email || !latitude || !longitude) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
+
+  try {
+    const admin = await Admin.findOne({ email });
+
+    if (!admin) {
+      return res.status(404).json({ message: "Admin not found" });
+    }
+
+    admin.lat = latitude;
+    admin.long = longitude;
+
+    await admin.save();
+
+    return res
+      .status(200)
+      .json({ message: "Location updated successfully" });
+  } catch (error) {
+    console.error("Error updating location:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+});
 
 server.listen(PORT, () => {
   console.log(`listing on ${PORT}`);
